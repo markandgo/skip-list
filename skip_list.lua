@@ -164,18 +164,31 @@ local skip_list = {
 		return node.key,node.value
 	end,
 	
-	-- Iterate in order
-	-- Return the index,key,value
-	iterate = function(self)
-		local node  = self.head[1]
-		local count = 0
+	-- Iterate in order or reverse
+	-- Return the key,value
+	iterate = function(self,mode)
+		mode = mode or 'normal'
+		if not (mode == 'normal' or mode == 'reverse') then
+			error('Invalid mode')
+		end
+		
+		local node,incr = self.head[1],1
+		
+		if mode == 'reverse' then
+			-- Search for the node at the end
+			for level = self._levels,1,-1 do
+				while node[level] do
+					node = node[level]
+				end
+			end
+			incr = -1
+		end
 		return function()
 			if node then
 				local k,v= node.key,node.value
 				-- Move to the next node
-				node     = node[1] 
-				count    = count + 1
-				return count,k,v
+				node     = node[incr] 
+				return k,v
 			end
 		end
 	end,

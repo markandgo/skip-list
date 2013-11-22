@@ -15,7 +15,9 @@ end
 
 table.sort(list)
 
-for i,k,v in sl:iterate() do
+local i = 0
+for k,v in sl:iterate() do
+	i = i + 1
 	if k ~= list[i] then
 		error('Invalid key in skip list: '..k..' vs '..list[i])
 	end
@@ -51,7 +53,9 @@ end
 -----------------------------
 local j = 1
 
-for i,k,v in sl:iterate() do
+local i = 0
+for k,v in sl:iterate() do
+	i = i + 1
 	assert(k == list[j])
 	j = j + 1
 end
@@ -67,7 +71,9 @@ for i = 1,100 do
 	sl:insert(pairs[i].key,pairs[i].value)
 end
 
-for i,k,v in sl:iterate() do
+local i = 0
+for k,v in sl:iterate() do
+	i = i + 1
 	assert(k == pairs[i].key and v == pairs[i].value)
 	assert(sl:find(k,v))
 end
@@ -86,8 +92,10 @@ end
 
 table.sort(list,function(a,b) return a > b end)
 
-for i,k,v in sl:iterate() do
+local i = sl:length()
+for k,v in sl:iterate('reverse') do
 	if k ~= list[i] then
 		error('Invalid key in skip list: '..k..' vs '..list[i])
 	end
+	i = i - 1
 end
