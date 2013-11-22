@@ -71,3 +71,23 @@ for i,k,v in sl:iterate() do
 	assert(k == pairs[i].key and v == pairs[i].value)
 	assert(sl:find(k,v))
 end
+
+-----------------------------
+-- TEST REVERSE ORDER
+-----------------------------
+sl = skip_list:new(nil,function(a,b) return a > b end)
+
+local list = {}
+for i = 1,100 do
+	local v = math.random(1,100)
+	table.insert(list,v)
+	sl:insert(v)
+end
+
+table.sort(list,function(a,b) return a > b end)
+
+for i,k,v in sl:iterate() do
+	if k ~= list[i] then
+		error('Invalid key in skip list: '..k..' vs '..list[i])
+	end
+end
