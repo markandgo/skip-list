@@ -60,6 +60,7 @@ local skip_list = {
 	end,
 	
 	-- Return the key, value, and node
+	-- If value is omitted, return any matching key and value
 	find = function(self,key,value)
 		local node = self.head
 		local comp = self.comp
@@ -147,6 +148,7 @@ local skip_list = {
 	end,
 	
 	-- Return the key,value if successful
+	-- If value is omitted, delete any matching key
 	-- Otherwise, return false
 	delete = function(self,key,value)
 		local k,v,node = self:find(key,value)
