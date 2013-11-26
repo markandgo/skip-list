@@ -76,14 +76,14 @@ local skip_list = {
 						local prev = node
 						while prev do
 							if prev.key == key and prev.value == value then
-								return prev.key,prev.value
+								return prev.key,prev.value,prev
 							end
 							prev = prev[-1]
 						end
 						local next = node[1]
 						while next do
 							if next.key == key and next.value == value then
-								return next.key,next.value
+								return next.key,next.value,next
 							end
 							next = next[1]
 						end

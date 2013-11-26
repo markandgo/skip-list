@@ -78,6 +78,13 @@ for k,v in sl:iterate() do
 	assert(sl:find(k,v))
 end
 
+-- Test delete 
+for i = 1,100 do
+	local k,v = sl:delete(pairs[1].key,pairs[1].value)
+	local t   = table.remove(pairs,1)
+	assert(t.key == k and t.value == v)
+end
+
 -----------------------------
 -- TEST REVERSE ORDER
 -----------------------------
