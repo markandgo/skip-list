@@ -206,6 +206,7 @@ local skip_list = {
 	end,
 	
 	-- Check the integrity of the skip list
+	-- Return true if it passes else error!
 	check = function(self)
 		local level = 0
 		while self.head[level+1] do
@@ -226,6 +227,17 @@ local skip_list = {
 						error('Node self reference!')
 					end
 				end
+				
+				-- If the node has a link at this level, it must also have a
+				-- link at the lower level
+				if level > 1 then
+					for direction = -1,1,2 do
+						if node[direction*level] and not node[direction*(level-1)] then
+							error(string.format('Missing node link at level %d',level-1))
+						end
+					end
+				end
+				
 				prev = node
 				node = node[level]
 			end
@@ -234,6 +246,7 @@ local skip_list = {
 			local template = 'Node level %d exceeds maximum: %d'
 			assert(level <= self._levels,template:format(#self.head,self._levels))
 		end
+		return true
 	end,
 }
 skip_list.__index = skip_list

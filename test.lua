@@ -75,24 +75,24 @@ end
 print 'Running key-value pair test'
 sl:clear()
 
-local pairs = {}
+local kvlist = {}
 for i = 1,size do
-	pairs[i] = {key = i,value = math.random(1,size)}
-	sl:insert(pairs[i].key,pairs[i].value)
+	kvlist[i] = {key = i,value = math.random(1,size)}
+	sl:insert(kvlist[i].key,kvlist[i].value)
 end
 sl:check()
 
 local i = 0
 for k,v in sl:iterate() do
 	i = i + 1
-	assert(k == pairs[i].key and v == pairs[i].value)
+	assert(k == kvlist[i].key and v == kvlist[i].value)
 	assert(sl:find(k,v))
 end
 
 -- Test delete 
 for i = 1,size do
-	local k,v = sl:delete(pairs[1].key,pairs[1].value)
-	local t   = table.remove(pairs,1)
+	local k,v = sl:delete(kvlist[1].key,kvlist[1].value)
+	local t   = table.remove(kvlist,1)
 	assert(t.key == k and t.value == v)
 end
 
@@ -176,3 +176,16 @@ for i = 1,runs do
 	end
 	sl:check()
 end
+print '\nEmptying skip list...'
+local low = 0
+while sl:length() > 0 do
+	local key = sl:pop()
+	if not comp(low,key) and low ~= key then
+		error(string.format('Invalid pop order: %s before %s',tostring(low),tostring(key)))
+	end
+	low = key
+end
+for i,v in pairs(sl.head) do
+	error 'Skip list was not emptied properly!'
+end
+print 'Done'
