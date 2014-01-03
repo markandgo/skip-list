@@ -36,7 +36,9 @@ local skip_list = {
 
 	clear = function(self)
 		self.head   = {}
+		self._levels= 1
 		self._count = 0
+		self._size  = 2^self._levels
 	end,
 	
 	-- comp: < or > (Duplicate keys are inserted at the beginning)
@@ -67,7 +69,7 @@ local skip_list = {
 		-- Start search at the highest level
 		for level = self._levels,1,-1 do
 			-- Move to the next node if its key is <= desired
-			while node[level] and comp(node[level].key,key) do	
+			while node[level] and (node[level].key == key or comp(node[level].key,key)) do	
 				node = node[level]
 				if node.key == key then
 					-- Search for key-value pair if there is value argument
@@ -119,10 +121,11 @@ local skip_list = {
 			if level <= levels then
 				new_node[-level] = node
 				new_node[level]  = node[level]
-				if node[level] then
-					node[level][-level] = new_node
+				node[level]      = new_node
+				if new_node[level] then
+					local next_node   = new_node[level]
+					next_node[-level] = new_node
 				end
-				node[level] = new_node
 			end
 		end
 
@@ -166,6 +169,13 @@ local skip_list = {
 		return node.key,node.value
 	end,
 	
+	-- Check but do not remove the first key,value
+	peek = function(self)
+		local node = self.head[1]
+		if not node then return false end
+		return node.key,node.value
+	end,
+	
 	-- Iterate in order or reverse
 	-- Return the key,value
 	iterate = function(self,mode)
@@ -192,6 +202,37 @@ local skip_list = {
 				node     = node[incr] 
 				return k,v
 			end
+		end
+	end,
+	
+	-- Check the integrity of the skip list
+	check = function(self)
+		local level = 0
+		while self.head[level+1] do
+			level      = level + 1
+			local prev = self.head
+			local node = self.head[level]
+			while node do
+				if prev ~= node[-level] then
+					local template = 'Node with key %d at level %d has invalid back reference!'
+					error( template:format(node.key,level) )
+				end
+				if node[level] then
+					if not self.comp(node.key,node[level].key) and node.key ~= node[level].key then
+						local template = 'Skip list is out of order on level %d: key %s is before %s!'
+						error(template:format(level,tostring(node.key),tostring(node[level].key)))
+					end
+					if node[level] == node then
+						error('Node self reference!')
+					end
+				end
+				prev = node
+				node = node[level]
+			end
+		end
+		do 
+			local template = 'Node level %d exceeds maximum: %d'
+			assert(level <= self._levels,template:format(#self.head,self._levels))
 		end
 	end,
 }

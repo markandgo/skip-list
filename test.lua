@@ -1,17 +1,21 @@
+math.randomseed(1)
+
 skip_list = require 'skip_list'
 
 sl = skip_list:new()
 
+local size = 1e4
 -----------------------------
 -- TEST INSERTION & ITERATE
 -----------------------------
-
+print 'Running insertion and iteration test'
 local list = {}
-for i = 1,100 do
-	local v = math.random(1,100)
+for i = 1,size do
+	local v = math.random(1,size)
 	table.insert(list,v)
 	sl:insert(v)
 end
+sl:check()
 
 table.sort(list)
 
@@ -26,30 +30,35 @@ end
 -----------------------------
 -- TEST FIND
 -----------------------------
-
-for i = 1,100 do
-	assert(sl:find(list[math.random(1,100)]))
+print 'Running find test'
+for i = 1,size do
+	local k,v,node = sl:find(list[math.random(1,size)])
+	assert(k == node.key and v == node.value)
 end
 
 -----------------------------
 -- TEST POP
 -----------------------------
-
-for i = 1,10 do
-	assert(sl:pop() == table.remove(list,1))
+print 'Running pop test'
+for i = 1,math.floor(.1*size) do
+	local peeked = sl:peek()
+	local popped = sl:pop()
+	assert(popped == table.remove(list,1) and popped == peeked)
 end
+sl:check()
 
 -----------------------------
 -- TEST DELETE
 -----------------------------
-
-for i = 1,40 do
+print 'Running delete test'
+for i = 1,math.floor(.4*size) do
 	local x = math.random(1,i)
 	assert(sl:delete(list[x]) == table.remove(list,x),x)
 end
+sl:check()
 	
 -----------------------------
--- CHECK LIST AGAIN
+-- CHECK AGAIN VIA ITERATION
 -----------------------------
 local j = 1
 
@@ -63,13 +72,15 @@ end
 -----------------------------
 -- TEST KEY-VALUE PAIR
 -----------------------------
+print 'Running key-value pair test'
 sl:clear()
 
 local pairs = {}
-for i = 1,100 do
-	pairs[i] = {key = i,value = math.random(1,100)}
+for i = 1,size do
+	pairs[i] = {key = i,value = math.random(1,size)}
 	sl:insert(pairs[i].key,pairs[i].value)
 end
+sl:check()
 
 local i = 0
 for k,v in sl:iterate() do
@@ -79,7 +90,7 @@ for k,v in sl:iterate() do
 end
 
 -- Test delete 
-for i = 1,100 do
+for i = 1,size do
 	local k,v = sl:delete(pairs[1].key,pairs[1].value)
 	local t   = table.remove(pairs,1)
 	assert(t.key == k and t.value == v)
@@ -88,14 +99,16 @@ end
 -----------------------------
 -- TEST REVERSE ORDER
 -----------------------------
+print 'Running reverse iteration test'
 sl = skip_list:new(nil,function(a,b) return a > b end)
 
 local list = {}
-for i = 1,100 do
-	local v = math.random(1,100)
+for i = 1,size do
+	local v = math.random(1,size)
 	table.insert(list,v)
 	sl:insert(v)
 end
+sl:check()
 
 table.sort(list,function(a,b) return a > b end)
 
@@ -105,4 +118,61 @@ for k,v in sl:iterate('reverse') do
 		error('Invalid key in skip list: '..k..' vs '..list[i])
 	end
 	i = i - 1
+end
+
+---------------------------------
+-- TEST INSERT & POP & DELETE MIX
+---------------------------------
+
+local insert_count = 100
+local pop_count    = 25
+local delete_count = 25
+local runs         = 200
+local range        = 10000
+local comp         = function(a,b) return a < b end
+
+sl = skip_list:new(nil,comp)
+local copy_list = {}
+print 'Running skip list integrity test:'
+for i = 1,runs do
+	for j = 1,insert_count do
+		local key = math.random(range)
+		sl:insert(key)
+		table.insert(copy_list,key)
+		if sl:length() % 10 == 0 then
+			io.write('Step: ',i,'/',runs,': List size: ',sl:length(),'\r')
+		end
+	end
+	table.sort(copy_list,comp)
+	sl:check()
+	
+	local low = 0
+	for k = 1,pop_count do
+		local peeked = sl:peek()
+		local key    = sl:pop()
+		local key2   = table.remove(copy_list,1)
+		assert(peeked == key, 'Invalid peeked key!')
+		assert(key2 == key, 'Invalid popped key!')
+		if not comp(low,key) and low ~= key then
+			error(string.format('Popped %d after %d',key,low))
+		end
+		low = key
+		if sl:length() % 10 == 0 then
+			io.write('Step: ',i,'/',runs,': List size: ',sl:length(),'\r')
+		end
+	end
+	sl:check()
+	
+	for l = delete_count,1,-1 do
+		local index = math.random(sl:length())
+		local key   = sl:delete(copy_list[index])
+		local key2  = table.remove(copy_list,index)
+		if key ~= key2 then
+			error(string.format('Deletion failed: %s ~= %s',tostring(key),tostring(key2)))
+		end
+		if sl:length() % 10 == 0 then
+			io.write('Step: ',i,'/',runs,': List size: ',sl:length(),'\r')
+		end
+	end
+	sl:check()
 end
