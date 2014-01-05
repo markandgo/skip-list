@@ -89,14 +89,12 @@ local skip_list = {
 							end
 							next = next[1]
 						end
-						return false
+						return
 					end
 					return node.key,node.value,node
 				end
 			end 
 		end
-		-- Return false if nothing was found
-		return false
 	end,
 	
 	insert = function(self,key,value)
@@ -152,19 +150,17 @@ local skip_list = {
 	
 	-- Return the key,value if successful
 	-- If value is omitted, delete any matching key
-	-- Otherwise, return false
 	delete = function(self,key,value)
 		local k,v,node = self:find(key,value)
-		if not node then return false end
+		if not node then return end
 		self:_delete(node)
 		return k,v
 	end,
 	
 	-- Return the first key,value
-	-- Return false if empty
 	pop = function(self)
 		local node  = self.head[1]
-		if not node then return false end
+		if not node then return end
 		self:_delete(node)
 		return node.key,node.value
 	end,
@@ -172,7 +168,7 @@ local skip_list = {
 	-- Check but do not remove the first key,value
 	peek = function(self)
 		local node = self.head[1]
-		if not node then return false end
+		if not node then return end
 		return node.key,node.value
 	end,
 	
