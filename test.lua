@@ -37,39 +37,6 @@ for i = 1,size do
 end
 
 -----------------------------
--- TEST POP
------------------------------
-print 'Running pop test'
-for i = 1,math.floor(.1*size) do
-	local peeked = sl:peek()
-	local popped = sl:pop()
-	assert(popped == table.remove(list,1) and popped == peeked)
-end
-sl:check()
-
------------------------------
--- TEST DELETE
------------------------------
-print 'Running delete test'
-for i = 1,math.floor(.4*size) do
-	local x = math.random(1,i)
-	assert(sl:delete(list[x]) == table.remove(list,x),x)
-end
-sl:check()
-	
------------------------------
--- CHECK AGAIN VIA ITERATION
------------------------------
-local j = 1
-
-local i = 0
-for k,v in sl:iterate() do
-	i = i + 1
-	assert(k == list[j])
-	j = j + 1
-end
-
------------------------------
 -- TEST KEY-VALUE PAIR
 -----------------------------
 print 'Running key-value pair test'
@@ -119,6 +86,18 @@ for k,v in sl:iterate('reverse') do
 	end
 	i = i - 1
 end
+
+-----------------------------
+-- TEST UPDATE
+-----------------------------
+print 'Running update test'
+sl = skip_list:new()
+sl:insert(1,1); sl:insert(2,2); sl:insert(3,3)
+sl:update(2,4, 2,4)
+assert(sl:pop() == 1)
+assert(sl:pop() == 3)
+local k,v = sl:pop(); assert(k == 4 and v == 4)
+assert(not sl:peek())
 
 ---------------------------------
 -- TEST INSERT & POP & DELETE MIX
