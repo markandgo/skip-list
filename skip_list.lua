@@ -96,18 +96,20 @@ local skip_list = {
 			end 
 		end
 	end,
-
-	_insert = function(self,key,value,levels,node)
-		local comp     = self.comp		
-		local new_node = {key = key, value = value}
-		
+	
+	insert = function(self,key,value)
 		-- http://stackoverflow.com/questions/12067045/random-level-function-in-skip-list
 		-- Using a uniform distribution, we find the number of levels 
 		-- by using the cdf of a geometric distribution
 		-- cdf(k)   = 1 - ( 1 - p )^k
 		-- levels-1 = log(1-cdf)/log(1-p)
-		levels         = min( floor( log(1-random())/log(1-p) ) + 1, self._levels )
-		node           = node or self.head
+		local levels = floor( log(1-random())/log(1-p) ) + 1
+		levels       = min(levels,self._levels)
+		local comp   = self.comp
+		
+		local new_node = {key = key, value = value}
+		
+		local node = self.head
 		-- Search for the biggest node <= to our key on each level
 		for level = self._levels,1,-1 do
 			while node[level] and comp(node[level].key,key) do
@@ -134,10 +136,6 @@ local skip_list = {
 		end
 	end,
 	
-	insert = function(self,key,value)
-		self:_insert(key,value)
-	end,
-	
 	_delete = function(self,node)
 		local level = 1
 		while node[-level] do
@@ -157,20 +155,6 @@ local skip_list = {
 		if not node then return end
 		self:_delete(node)
 		return k,v
-	end,
-	
-	-- Update an element. Faster than deleting and reinserting.
-	-- Old and new values are optional
-	-- If a new value is provided, the old value is optional
-	update = function(self, old_key,new_key, old_value,new_value)
-		local _,_,node = self:find(old_key,old_value)
-		local levels   = 0
-		while node[-(levels+1)] do 
-			levels = levels+1
-		end
-		local prev = node[-levels]
-		self:_delete(node)
-		self:_insert(new_key,new_value,levels,prev)
 	end,
 	
 	-- Return the first key,value
