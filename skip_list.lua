@@ -41,8 +41,8 @@ local skip_list = {
 		self._size  = 2^self._levels
 	end,
 	
-	-- comp: < or > (Duplicate keys are inserted at the beginning)
-	-- comp: <= or >= (Duplicate keys are inserted at the end)
+	-- comp: <= or >= (Duplicate keys are inserted at the beginning)
+	-- comp: (default: <) or > (Duplicate keys are inserted at the end)
 	new = function(class,initial_size,comp)
 		initial_size= initial_size or 100
 		
@@ -53,7 +53,7 @@ local skip_list = {
 			_levels= levels, -- recommended by Pugh
 			_count = 0,
 			_size  = 2^levels,
-			comp   = comp or function(a,b) return a <= b end},
+			comp   = comp or function(a,b) return a < b end},
 			class)
 	end,
 	
@@ -68,7 +68,6 @@ local skip_list = {
 		local comp = self.comp
 		-- Start search at the highest level
 		for level = self._levels,1,-1 do
-			-- Move to the next node if its key is <= desired
 			while node[level] and (node[level].key == key or comp(node[level].key,key)) do	
 				node = node[level]
 				if node.key == key then
@@ -112,7 +111,7 @@ local skip_list = {
 		local node = self.head
 		-- Search for the biggest node <= to our key on each level
 		for level = self._levels,1,-1 do
-			while node[level] and comp(node[level].key,key) do
+			while node[level] and not comp(key,node[level].key) do
 				node = node[level]
 			end
 			-- Connect the nodes to the new node
