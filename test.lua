@@ -69,31 +69,26 @@ for k,v in sl:iterate() do
 	j = j + 1
 end
 
------------------------------
--- TEST KEY-VALUE PAIR
------------------------------
-print 'Running key-value pair test'
+------------------------------------
+-- TEST KEY-VALUE PAIR AND STABILITY
+------------------------------------
+print 'Running key-value pair and stability test'
 sl:clear()
 
 local kvlist = {}
 for i = 1,size do
-	kvlist[i] = {key = i,value = math.random(1,size)}
+	kvlist[i] = {key = math.random(1,size),value = i}
 	sl:insert(kvlist[i].key,kvlist[i].value)
 end
 sl:check()
+table.sort(kvlist,function(a,b)
+	return a.key < b.key or a.key == b.key and a.value < b.value
+end)
 
 local i = 0
 for k,v in sl:iterate() do
 	i = i + 1
 	assert(k == kvlist[i].key and v == kvlist[i].value)
-	assert(sl:find(k,v))
-end
-
--- Test delete 
-for i = 1,size do
-	local k,v = sl:delete(kvlist[1].key,kvlist[1].value)
-	local t   = table.remove(kvlist,1)
-	assert(t.key == k and t.value == v)
 end
 
 -----------------------------

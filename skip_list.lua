@@ -50,10 +50,10 @@ local skip_list = {
 		
 		return setmetatable({
 			head   = {},
-			_levels= levels, -- recommended by Pugh
+			_levels= levels,
 			_count = 0,
 			_size  = 2^levels,
-			comp   = comp or function(a,b) return a <= b end},
+			comp   = comp or function(key1,key2) return key1 <= key2 end},
 			class)
 	end,
 	
@@ -68,10 +68,17 @@ local skip_list = {
 		local comp = self.comp
 		-- Start search at the highest level
 		for level = self._levels,1,-1 do
-			-- Move to the next node if its key is <= desired
-			while node[level] and (node[level].key == key or comp(node[level].key,key)) do	
-				node = node[level]
-				if node.key == key then
+			while node[level] do
+				local old= node
+				node     = node[level]
+				local c1 = comp(node.key,key)
+				local c2 = not comp(key,node.key)
+				--[[
+					If both comparisons are true, then move to the next node
+					If one of them is true, a matching key was found!
+					If both are false, stay on the same node
+				]]
+				if c1 ~= c2 then
 					-- Search for key-value pair if there is value argument
 					if value then
 						-- Search "left" and "right" sides for matching value
@@ -92,6 +99,9 @@ local skip_list = {
 						return
 					end
 					return node.key,node.value,node
+				elseif c1 == false then
+					node = old
+					break
 				end
 			end 
 		end
@@ -205,6 +215,7 @@ local skip_list = {
 	-- Return true if it passes else error!
 	check = function(self)
 		local level = 0
+		local comp  = self.comp
 		while self.head[level+1] do
 			level      = level + 1
 			local prev = self.head
@@ -215,11 +226,14 @@ local skip_list = {
 					error( template:format(node.key,level) )
 				end
 				if node[level] then
-					if not self.comp(node.key,node[level].key) and node.key ~= node[level].key then
+					local next_node= node[level]
+					local c1       = comp(node.key,next_node.key)
+					local c2       = not comp(next_node.key,node.key)
+					if not (c1 or c2) then
 						local template = 'Skip list is out of order on level %d: key %s is before %s!'
 						error(template:format(level,tostring(node.key),tostring(node[level].key)))
 					end
-					if node[level] == node then
+					if next_node == node then
 						error('Node self reference!')
 					end
 				end
